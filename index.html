@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e6007e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GTA 6 Hub">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>GTA 6 Hub</title>
+<style>
+:root{--bg:#fff6fb;--card:#fff;--text:#2a1130;--muted:#7a5a82;--accent:#e6007e;--accent2:#ff8a00;--border:#f0cfe3;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16091c;--card:#241130;--text:#f8e9ff;--muted:#b995c4;--accent:#ff3fa4;--accent2:#ffa033;--border:#44205a}}
+:root[data-theme="dark"]{--bg:#16091c;--card:#241130;--text:#f8e9ff;--muted:#b995c4;--accent:#ff3fa4;--accent2:#ffa033;--border:#44205a}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+main{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:clamp(2.2rem,8vw,3.6rem);margin:8px 0 4px;letter-spacing:-1px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);margin:0 0 28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.cat{display:block;text-align:left;width:100%;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;color:var(--text);cursor:pointer;font:inherit;transition:transform .15s}
+.cat:hover{transform:translateY(-3px)}
+.cat .ic{font-size:2rem}.cat b{display:block;font-size:1.2rem;margin-top:8px}.cat span{color:var(--muted);font-size:.9rem}
+a.back{display:inline-block;margin-bottom:12px;color:var(--accent);text-decoration:none;font-weight:600}
+form{display:grid;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin:16px 0}
+input{font:inherit;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);width:100%}
+button.add{font:inherit;font-weight:600;padding:10px;border:0;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;cursor:pointer}
+.err{color:var(--accent);min-height:1.2em;font-size:.9rem;margin:0}
+.item{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.item a{flex:1;color:var(--text);text-decoration:none;overflow:hidden}
+.item a b{display:block}.item a small{color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.play{font-size:1.4rem}
+.del{background:none;border:0;color:var(--muted);font-size:1.2rem;cursor:pointer}
+.empty{color:var(--muted);text-align:center;padding:24px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const CATS=[
+{id:"collectibles",name:"Collectibles",ic:"💎"},
+{id:"guns",name:"Guns",ic:"🔫"},
+{id:"hideouts",name:"Hideouts",ic:"🏚️"},
+{id:"blandet",name:"Blandet",ic:"🎲"}];
+let data={};
+try{data=JSON.parse(localStorage.getItem("gta6links")||"{}")}catch(e){data={}}
+function save(){try{localStorage.setItem("gta6links",JSON.stringify(data))}catch(e){}}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+const app=document.getElementById("app");
+function home(){
+app.innerHTML='<h1>GTA 6 Hub</h1><p class="sub">Vælg en kategori og saml dine Instagram-videoer</p><div class="grid">'+
+CATS.map(c=>{const n=(data[c.id]||[]).length;return '<button class="cat" data-id="'+c.id+'"><div class="ic">'+c.ic+'</div><b>'+c.name+'</b><span>'+n+' video'+(n===1?'':'er')+'</span></button>'}).join("")+'</div>';
+app.querySelectorAll(".cat").forEach(b=>b.onclick=()=>{location.hash=b.dataset.id});
+}
+function cat(id){
+const c=CATS.find(x=>x.id===id);if(!c)return home();
+const list=data[id]||[];
+app.innerHTML='<a class="back" href="#">← Forside</a><h1>'+c.ic+' '+c.name+'</h1>'+
+'<form id="f"><input id="u" placeholder="Indsæt Instagram-link (reel eller opslag)" inputmode="url"><input id="t" placeholder="Titel (valgfri)"><button class="add" type="submit">Tilføj video</button><p class="err" id="e"></p></form>'+
+(list.length?list.map((v,i)=>'<div class="item"><a href="'+esc(v.url)+'" target="_blank" rel="noopener noreferrer"><b>'+esc(v.title||"Instagram-video")+'</b><small>'+esc(v.url)+'</small></a><span class="play">▶️</span><button class="del" data-i="'+i+'" aria-label="Slet">✕</button></div>').join(""):'<div class="empty">Ingen videoer endnu</div>');
+document.getElementById("f").onsubmit=e=>{
+e.preventDefault();
+const url=document.getElementById("u").value.trim(),t=document.getElementById("t").value.trim();
+if(!/^https?:\/\/(www\.)?instagram\.com\//i.test(url)){document.getElementById("e").textContent="Det ligner ikke et Instagram-link";return}
+(data[id]=data[id]||[]).unshift({url:url,title:t});save();cat(id);
+};
+app.querySelectorAll(".del").forEach(b=>b.onclick=()=>{data[id].splice(+b.dataset.i,1);save();cat(id)});
+}
+function route(){const h=location.hash.slice(1);h?cat(h):home()}
+window.addEventListener("hashchange",route);route();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
+</script>
+</body>
+</html>
